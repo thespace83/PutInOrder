@@ -3,7 +3,8 @@ from parser import parse_university
 
 
 def main():
-    close_admission_campaign(parse_university())
+    university = parse_university()
+    close_admission_campaign(university)
 
 
 if __name__ == '__main__':
