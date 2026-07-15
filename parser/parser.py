@@ -48,7 +48,9 @@ def parse_referral(path: str, name: str, number_of_places: int) -> Referral:
 def parse_university() -> dict[str, Referral]:
     university: dict[str, Referral] = {}
     referrals: list[tuple[str, int]] = [
-        ('Спец. #A', 3)
+        ('Спец. #A', 3),
+        ('Спец. #B', 2),
+        ('Спец. #C', 3)
     ]
 
     for referral in referrals:
