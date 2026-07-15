@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 def get_minimal_points(university: 'University', referral: 'Referral') -> int:
     if referral.number_of_places > len(university.result[referral.name]):
-        return 0
+        return -1
 
     minimum_points: int = 999
     for applicant in university.result[referral.name]:
@@ -19,6 +19,8 @@ def get_minimal_points(university: 'University', referral: 'Referral') -> int:
 
 def get_undocumented_applicant(university: 'University') -> Applicant | None:
     for applicant in university.applicants:
+        if applicant.dropped_out:
+            continue
         documented: bool = False
         for referral in university.result.keys():
             if university.result[referral].__contains__(applicant):
@@ -33,7 +35,6 @@ def remove_under(university: 'University', referral: 'Referral'):
     points = get_minimal_points(university, referral)
     candidates: set[Applicant] = set()
     for applicant in university.result[referral.name]:
-        print(applicant.amount_of_points, points)
         if applicant.amount_of_points <= points:
             candidates.add(applicant)
 
@@ -45,7 +46,10 @@ def remove_under(university: 'University', referral: 'Referral'):
 
 
 def enroll(university: 'University', applicant: Applicant):
-    for priority in range(len(applicant.priorities)):
+    for priority in range(applicant.get_lowest_priority()):
+        if applicant.get_list_of_priorities()[priority] == '':
+            continue
+
         referral = university.get_referral_by_name(applicant.get_list_of_priorities()[priority])
         if referral is None:
             raise 'Referral is None'
@@ -55,6 +59,7 @@ def enroll(university: 'University', applicant: Applicant):
             if len(university.result[referral.name]) > referral.number_of_places:
                 remove_under(university, referral)
             return
+    applicant.dropped_out = True
 
 
 def close_admission_campaign(university: 'University') -> 'University':
@@ -63,15 +68,14 @@ def close_admission_campaign(university: 'University') -> 'University':
 
     undocumented_applicant = get_undocumented_applicant(university)
     while undocumented_applicant is not None:
-        # ---
-        for name in university.result.keys():
-            print(f'{name}: ', end='')
-            for a in university.result[name]:
-                print(a.uuid, end=', ')
-            print()
-        print()
-        # ---
+        # # ---
+        # for name in university.result.keys():
+        #     print(f'{name}: ', end='')
+        #     for a in university.result[name]:
+        #         print(a.uuid, end=', ')
+        #     print()
+        # print()
+        # # ---
         enroll(university, undocumented_applicant)
         undocumented_applicant = get_undocumented_applicant(university)
-
     return university

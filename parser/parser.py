@@ -47,9 +47,10 @@ def add_applicant(local_applicant: LocalApplicant, referral: Referral, applicant
 
 def parse_university() -> University:
     referrals: set[Referral] = set()
-    referrals.add(Referral('Спец. #A', 3))
-    referrals.add(Referral('Спец. #B', 2))
-    referrals.add(Referral('Спец. #C', 3))
+    referrals.add(Referral(
+        'Уголовное_право, криминалистика и уголовное судопроизводство_Цивилистика_и гражданское судопроизводство.2026-07-15_17-39-31',
+        3))
+    referrals.add(Referral('Финансы_и кредит.2026-07-15_17-39-33', 8))
 
     applicants: set[Applicant] = set()
 
