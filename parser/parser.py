@@ -1,11 +1,11 @@
-from analyzer import Applicant
+from analyzer import Applicant, Referral
 from os.path import join
 
 applicants: set = set()
 
 
 def check_titles(title: str) -> bool:
-    titles: list[str] = title[1:-1].split(';')
+    titles: list[str] = title[:-1].split(';')
     return (titles[0] == '"Порядковый номер"' and titles[1] == '"ID участника"' and titles[2] == '"Приоритет конкурса"'
             and titles[3] == '"Подано согласие"' and titles[4] == '"Сумма баллов"' and titles[5] == '"Баллы за ВИ"'
             and titles[6] == '"Баллы за ИД"' and titles[7] == '"Статус"' and titles[
@@ -30,26 +30,30 @@ def parse_applicant(row: str, referral: str) -> Applicant | None:
     return Applicant(uuid, {referral: priority}, amount_of_points)
 
 
-def parse_referral(path: str, name: str) -> set[Applicant]:
-    result: set[Applicant] = set()
+def parse_referral(path: str, name: str, number_of_places: int) -> Referral:
+    referral: Referral = Referral(name, number_of_places)
 
     file = open(path, 'rb')
     if not check_titles(file.readline().decode('utf-8')):
         raise 'Не верный .csv файл!'
 
     for row in file.readlines():
-        applicants.add(parse_applicant(row.decode('utf-8'), name))
+        applicant = parse_applicant(row.decode('utf-8'), name)
+        if applicant:
+            referral.applicants.add(applicant)
 
-    return result
+    return referral
 
 
-def parse_university() -> dict[str, set[Applicant]]:
-    university: dict[str, set[Applicant]] = {}
-    referrals: list[str] = [
-        'Уголовное_право, криминалистика и уголовное судопроизводство_Цивилистика_и гражданское судопроизводство.2026-07-14_13-21-04',
-        'Финансы_и кредит.2026-07-14_13-21-05']
+def parse_university() -> dict[str, Referral]:
+    university: dict[str, Referral] = {}
+    referrals: list[tuple[str, int]] = [
+        ('Спец. #A', 3)
+    ]
 
     for referral in referrals:
-        university[referral] = parse_referral(join('parser', 'data', f'{referral}.csv'), referral)
+        name: str = referral[0]
+        number_of_places: int = referral[1]
+        university[name] = parse_referral(join('parser', 'data', f'{name}.csv'), name, number_of_places)
 
     return university
