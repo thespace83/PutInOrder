@@ -1,11 +1,9 @@
-from analyzer import University
+from analyzer import close_admission_campaign
 from parser import parse_university
 
 
 def main():
-    university: University = parse_university()
-    for applicant in university.applicants:
-        print(applicant)
+    close_admission_campaign(parse_university())
 
 
 if __name__ == '__main__':
