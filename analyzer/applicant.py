@@ -4,6 +4,12 @@ class Applicant:
         self.priorities: dict[str, int] = priorities
         self.amount_of_points: int = amount_of_points
 
+    def get_list_of_priorities(self) -> list[str]:
+        priorities: list[str] = [''] * len(self.priorities.keys())
+        for name in self.priorities.keys():
+            priorities[self.priorities[name] - 1] = name
+        return priorities
+
     def __eq__(self, other):
         return self.uuid == other.uuid
 
