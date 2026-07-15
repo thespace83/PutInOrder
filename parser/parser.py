@@ -1,5 +1,7 @@
 from analyzer import Applicant, Referral, University
 from os.path import join
+from os import listdir
+import json
 
 
 class LocalApplicant:
@@ -45,17 +47,23 @@ def add_applicant(local_applicant: LocalApplicant, referral: Referral, applicant
                              local_applicant.amount_of_points))
 
 
-def parse_university() -> University:
-    referrals: set[Referral] = set()
-    referrals.add(Referral(
-        'Уголовное_право, криминалистика и уголовное судопроизводство_Цивилистика_и гражданское судопроизводство.2026-07-15_17-39-31',
-        3))
-    referrals.add(Referral('Финансы_и кредит.2026-07-15_17-39-33', 8))
+def get_sources() -> set[Referral]:
+    data = json.loads(open('data.json', 'r').read())
 
+    referrals: set[Referral] = set()
+    for file in listdir(join('data')):
+        name = file.split('.')[0]
+        referrals.add(Referral(name + f'.{file.split('.')[1]}', data[name]))
+
+    return referrals
+
+
+def parse_university() -> University:
+    referrals: set[Referral] = get_sources()
     applicants: set[Applicant] = set()
 
     for referral in referrals:
-        for local_applicant in parse_local_applicants(join('parser', 'data', f'{referral.name}.csv')):
+        for local_applicant in parse_local_applicants(join('data', f'{referral.name}.csv')):
             add_applicant(local_applicant, referral, applicants)
 
     return University(referrals, applicants)
