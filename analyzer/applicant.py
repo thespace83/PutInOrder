@@ -9,3 +9,6 @@ class Applicant:
 
     def __hash__(self):
         return self.uuid.__hash__()
+
+    def __str__(self):
+        return f'{self.uuid} // {self.amount_of_points} // {self.priorities}'
