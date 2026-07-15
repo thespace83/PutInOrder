@@ -1,61 +1,60 @@
-from analyzer import Applicant, Referral
+from analyzer import Applicant, Referral, University
 from os.path import join
 
-applicants: set = set()
+
+class LocalApplicant:
+    def __init__(self, uuid: int, amount_of_points: int, priority: int, ):
+        self.uuid: int = uuid
+        self.amount_of_points: int = amount_of_points
+        self.priority: int = priority
 
 
-def check_titles(title: str) -> bool:
-    titles: list[str] = title[:-1].split(';')
-    return (titles[0] == '"Порядковый номер"' and titles[1] == '"ID участника"' and titles[2] == '"Приоритет конкурса"'
-            and titles[3] == '"Подано согласие"' and titles[4] == '"Сумма баллов"' and titles[5] == '"Баллы за ВИ"'
-            and titles[6] == '"Баллы за ИД"' and titles[7] == '"Статус"' and titles[
-                8] == '"Дата выбора конкурсной группы по Москве"')
-
-
-def parse_applicant(row: str, referral: str) -> Applicant | None:
+def parse_local_applicant(row: str) -> LocalApplicant | None:
     data: list[str] = row[:-1].split(';')
     consent_submitted: bool = False if data[3] == '"—"' else True
     if not consent_submitted:
         return None
 
     uuid = int(data[1])
-    priority: int = int(data[2])
     amount_of_points = int(data[4])
+    priority: int = int(data[2])
 
-    for applicant in applicants:
-        if applicant.uuid == uuid:
-            applicant.priorities[referral] = priority
-            return applicant
-
-    return Applicant(uuid, {referral: priority}, amount_of_points)
+    return LocalApplicant(uuid, amount_of_points, priority)
 
 
-def parse_referral(path: str, name: str, number_of_places: int) -> Referral:
-    referral: Referral = Referral(name, number_of_places)
-
+def parse_local_applicants(path: str) -> set[LocalApplicant]:
     file = open(path, 'rb')
-    if not check_titles(file.readline().decode('utf-8')):
-        raise 'Не верный .csv файл!'
+    file.readline()
 
+    local_applicants: set[LocalApplicant] = set()
     for row in file.readlines():
-        applicant = parse_applicant(row.decode('utf-8'), name)
-        if applicant:
-            referral.applicants.add(applicant)
+        local_applicant = parse_local_applicant(row.decode('utf-8'))
+        if local_applicant:
+            local_applicants.add(local_applicant)
 
-    return referral
+    return local_applicants
 
 
-def parse_university() -> dict[str, Referral]:
-    university: dict[str, Referral] = {}
-    referrals: list[tuple[str, int]] = [
-        ('Спец. #A', 3),
-        ('Спец. #B', 2),
-        ('Спец. #C', 3)
-    ]
+def add_applicant(local_applicant: LocalApplicant, referral: Referral, applicants: set[Applicant]):
+    for applicant in applicants:
+        if applicant.uuid == local_applicant.uuid:
+            applicant.priorities[referral.name] = local_applicant.priority
+
+    applicants.add(Applicant(local_applicant.uuid,
+                             {referral.name: local_applicant.priority},
+                             local_applicant.amount_of_points))
+
+
+def parse_university() -> University:
+    referrals: set[Referral] = set()
+    referrals.add(Referral('Спец. #A', 3))
+    referrals.add(Referral('Спец. #B', 2))
+    referrals.add(Referral('Спец. #C', 3))
+
+    applicants: set[Applicant] = set()
 
     for referral in referrals:
-        name: str = referral[0]
-        number_of_places: int = referral[1]
-        university[name] = parse_referral(join('parser', 'data', f'{name}.csv'), name, number_of_places)
+        for local_applicant in parse_local_applicants(join('parser', 'data', f'{referral.name}.csv')):
+            add_applicant(local_applicant, referral, applicants)
 
-    return university
+    return University(referrals, applicants)

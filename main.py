@@ -1,11 +1,11 @@
+from analyzer import University
 from parser import parse_university
-from analyzer import close_admission_campaign, Referral
 
 
 def main():
-    university: dict[str, Referral] = parse_university()
-    for n in university:
-        print(university[n])
+    university: University = parse_university()
+    for applicant in university.applicants:
+        print(applicant)
 
 
 if __name__ == '__main__':
