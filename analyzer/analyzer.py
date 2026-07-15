@@ -29,13 +29,31 @@ def get_undocumented_applicant(university: 'University') -> Applicant | None:
     return None
 
 
+def remove_under(university: 'University', referral: 'Referral'):
+    points = get_minimal_points(university, referral)
+    candidates: set[Applicant] = set()
+    for applicant in university.result[referral.name]:
+        print(applicant.amount_of_points, points)
+        if applicant.amount_of_points <= points:
+            candidates.add(applicant)
+
+    lowes_priority_applicant: Applicant = next(iter(candidates))
+    for candidate in candidates:
+        if candidate.priorities[referral.name] > lowes_priority_applicant.priorities[referral.name]:
+            lowes_priority_applicant = candidate
+    university.result[referral.name].remove(lowes_priority_applicant)
+
+
 def enroll(university: 'University', applicant: Applicant):
     for priority in range(len(applicant.priorities)):
         referral = university.get_referral_by_name(applicant.get_list_of_priorities()[priority])
         if referral is None:
             raise 'Referral is None'
-        if get_minimal_points(university, referral) < applicant.amount_of_points:
+        minimal_points = get_minimal_points(university, referral)
+        if minimal_points < applicant.amount_of_points:
             university.result[referral.name].add(applicant)
+            if len(university.result[referral.name]) > referral.number_of_places:
+                remove_under(university, referral)
             return
 
 
